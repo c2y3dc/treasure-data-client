@@ -3,6 +3,8 @@
 require 'td'
 require 'td-client'
 require 'thor'
+require 'terminal-table'
+require 'csv'
 
 class TdCLI < Thor
     default_task :my_default
@@ -26,7 +28,17 @@ class TdCLI < Thor
                 job.update_progress!
             end
             job.update_status!  # get latest info
-            job.result_each { |row| p row }
+
+            # See if it's CSV or tabular and ouput it
+            if options[:format] == "csv"
+                csv_string = CSV.generate do |csv|
+                    job.result_each { |row| csv << row }
+                end
+                puts options[:column] #headings
+                puts csv_string
+            else
+                puts Terminal::Table.new :rows => job.result, :headings => options[:column].split(',')
+            end
         end 
 
         # Work around for running Thor without explicitly calling method

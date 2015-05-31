@@ -4,37 +4,29 @@ require 'td'
 require 'td-client'
 require 'thor'
 
-cln = TreasureData::Client.new(ENV['TREASURE_DATA_API_KEY'])
-job = cln.query('testdb', 'SELECT COUNT(1) FROM www_access')
-until job.finished?
-  sleep 2
-  job.update_progress!
-end
-job.update_status!  # get latest info
-job.result_each { |row| p row }
- 
-class MyCLI < Thor
-    class_option :verbose, :type => :boolean
+class TdCLI < Thor 
+    option :column, :default => "*", :aliases => :c
+    option :min, :default => "NULL", :aliases => :m
+    option :MAX, :default => "NULL", :aliases => :M
+    option :format, :default => "tabular", :aliases => :f
+    option :engine, :default => :hive, :aliases => :e
 
-    desc "hello NAME", "say hello to NAME"
-    option :from, :default => "Ervin"
-    option :yell, :type => :boolean
-    def hello(name)
-        puts "> saying hello" if options[:verbose]
-        output = []
-        output << "from: #{options[:from]}" if options[:from]
-        output << "Hello #{name}"
-        output = output.join("\n")
-        puts options[:yell] ? output.upcase : output
-        puts "> done saying hello" if options[:verbose]
-    end
-    
-    desc "goodbye", "say goodbye to the world"
-    def goodbye
-        puts "> saying goodbye" if options[:verbose]
-        puts "Goodbye World"
-        puts "> done saying goodbye" if options[:verbose]
-    end
+    desc "my_default", "Where the magic happens"
+    def my_default(*args)
+        db_name = args[0]
+        table_name = args[1]
+
+        cln = TreasureData::Client.new(ENV['TREASURE_DATA_API_KEY'])
+        # https://github.com/treasure-data/td-client-ruby/blob/master/lib/td/client.rb#L179
+        job = cln.query(db_name, "SELECT #{options[:column]} FROM #{table_name} WHERE TD_TIME_RANGE(time, #{options[:min]}, #{options[:MAX]})", nil, nil, nil, {:type => options[:engine].to_sym})
+        until job.finished?
+            sleep 1
+            job.update_progress!
+        end
+        job.update_status!  # get latest info
+        job.result_each { |row| p row }
+    end 
 end
  
-MyCLI.start(ARGV)
+TdCLI.start(ARGV)
+

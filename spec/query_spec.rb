@@ -3,6 +3,7 @@ require 'spec_helper'
 require 'td'
 require 'td-client'
 
+# overrides puts to suppress uneccessary test output from rspec
 def puts(str)
 end
 
@@ -61,4 +62,5 @@ describe "Complex Query" do
     it "should should have correct number of arguments" do
         expect(query_length).to equal(8)
     end
+
 end

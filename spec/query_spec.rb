@@ -8,7 +8,6 @@ end
 
 describe "Query" do
     query1 = "sample_datasets www_access".split(" ")
-
     query2 = "sample_datasets www_access -c 'host,time,path' -M 1412321162 -e presto".split(" ")
     result1 = TdCLI.start(query1)
     result1_length = result1.size
